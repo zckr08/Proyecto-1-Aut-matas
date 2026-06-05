@@ -1,5 +1,7 @@
 import pygame
 import hormiga_logica as hor
+from random import choice
+
 
 tam = 10
 filas = 100
@@ -7,6 +9,15 @@ columnas = 100
 tick = 1000
 
 
+instrucciones = input()
+direcciones = {}
+colores = hor.generarColores(len(instrucciones))
+for d in instrucciones:
+    if d not in direcciones:
+        direcciones[d] = []
+instrucciones = list(instrucciones)
+for key in range(len(instrucciones)):
+    direcciones[instrucciones[key]].append(colores[key])
 
 def main():
     filaHormiga = filas // 2
@@ -38,12 +49,12 @@ def main():
         window.fill((0, 0, 0))
         for f in range(filas):
             for c in range(columnas):
-                if M[f][c] == 1:
+                if M[f][c] != 0:
                     x = c * tam
                     y = f * tam
-                    pygame.draw.rect(window, (0, 255, 128), (x, y, tam, tam))
+                    pygame.draw.rect(window, colores[M[f][c] - 1], (x, y, tam, tam))
         if not pausa:
-            M, filaHormiga, columnaHormiga, direccion  = hor.avanzar(M, filaHormiga, columnaHormiga, direccion)
+            M, filaHormiga, columnaHormiga, direccion  = hor.siguiente(M, filaHormiga, columnaHormiga, direccion, filas, columnas, len(colores), instrucciones)
         pygame.display.update()
         clock.tick(1000)
     pygame.quit()
