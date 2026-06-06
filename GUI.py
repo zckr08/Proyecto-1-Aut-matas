@@ -148,7 +148,7 @@ def main():
         colores = hor.generarColores(len(instrucciones))
         filaHormiga = filas // 2
         columnaHormiga = columnas // 2
-        direccion = "U"
+        direccion = "R"
     w = columnas * tam
     h = filas * tam
     window = pygame.display.set_mode((w,h))
@@ -197,6 +197,9 @@ def main():
                             (_,M,filas,columnas,tam,nacimiento,sobrevive)=datos
                             tipo_automata = "Life-Like"
                             tick = 10
+                            w = columnas * tam
+                            h = filas * tam
+                            window=pygame.display.set_mode((w, h))
                         else:
                             (_,M,filas,columnas,tam,instrucciones,filaHormiga,columnaHormiga,direccion)=datos
                             colores = hor.generarColores(len(instrucciones))
@@ -216,7 +219,10 @@ def main():
                     f = y // tam
                     c = x // tam
                     if 0 <= f < filas and 0 <= c < columnas:
-                        M[f][c] = (M[f][c] + 1) % 2
+                        if tipo_automata == "Life-Like":
+                            M[f][c] = (M[f][c] + 1) % 2
+                        else:
+                            M[f][c] = (M[f][c] + 1) % len(colores)
         window.fill((0,0,0))
         for f in range(filas):
             for c in range(columnas):

@@ -1,49 +1,74 @@
 from random import randint
+from copy import deepcopy as dc
+import pickle as pk
 
-def generar_matriz(filas, columnas):
-    """Función que retorna una matriz de las dimensiones
-    especificadas con valores enteros aleatorios de 0 o 1"""
-    return [[randint(0, 1) for c in range(columnas)] for f in range(filas)]    
+def generarMatrizAleatoria(filas, columnas):
+    """
+    Retorna una matriz con valores enteros aleatorios de 0 o 1.
+    Entradas: filas (int), columnas (int).
+    Salidas: matriz de dimensiones filas x columnas con valores 0 o 1.
+    Restricciones: filas y columnas deben ser enteros positivos.
+    """
+    return [[randint(0,1) for c in range(columnas)] for f in range(filas)]
+
+def generarMatrizVacia(filas, columnas):
+    """
+    Retorna una matriz con todos los valores en cero.
+    Entradas: filas (int), columnas (int).
+    Salidas: matriz de dimensiones filas x columnas con todos los valores en 0.
+    Restricciones: filas y columnas deben ser enteros positivos.
+    """
+    return [[0 for c in range(columnas)] for f in range(filas)]
 
 def obtener_vecinos(M, f, c):
-    """Función que retorna una lista con los estados de
-    los 8 vecinos de la célula en la posición f, c de M."""
-    vecinos = []
-    for filasV in range(f-1, f+2):          
-        for colsV in range(c-1, c+2):       
-            if not (filasV == f and colsV == c):  
-                i = filasV % len(M)
-                j = colsV % len(M[0])
-                vecinos.append(M[i][j])
-    return vecinos 
+    """
+    Retorna una lista con los estados de los 8 vecinos de la célula en la posición f, c usando vecindario de Moore con wrap-around.
+    Entradas: M (matriz), f (int) fila de la célula, c (int) columna de la célula.
+    Salidas: lista de 8 enteros con los estados de los vecinos.
+    Restricciones: M debe ser una matriz rectangular no vacía. f y c deben ser índices válidos.
+    """
+    filas = len(M)
+    cols = len(M[0])
+    e = [M[(f-1)%filas][(c-1)%cols], M[(f-1)%filas][c%cols],M[(f-1)%filas][(c+1)%cols],
+         M[(f)%filas][(c-1)%cols],M[(f)%filas][(c+1)%cols],
+         M[(f+1)%filas][(c-1)%cols], M[(f+1)%filas][c%cols],M[(f+1)%filas][(c+1)%cols]]
+    return e
 
-def transicion_celula(estado, vecinos):
-    """Retorna el nuevo estado de la célula de acuerdo
-    al estado de sus vecinos.
-    Si estado == 0 y tiene 3 vecinos vivos --> viva
-    Si estado == 1 y tiene menos de 2 vecinos vivos --> muere
-    Si estado == 1 y tiene más de 3 vecinos vivos --> muere
-    Cualquier otra combinación, el estado sigue igual."""
-    vivos = sum(vecinos)                     
-    if estado == 0 and vivos == 3:           
+def transicion_celula(estado, vecinos, nacimiento, sobrevive):
+    """
+    Retorna el nuevo estado de una célula según las reglas Life-Like (Bx/Sy).
+    Entradas: estado (int) 0 o 1, vecinos (list) estados de los 8 vecinos, nacimiento (tuple) dígitos B, sobrevive (tuple) dígitos S.
+    Salidas: nuevo estado de la célula (0 o 1).
+    Restricciones: estado debe ser 0 o 1. nacimiento y sobrevive deben contener enteros entre 0 y 8.
+    """
+    v = vecinos.count(1)
+    if estado == 0 and v in nacimiento:
         return 1
-    elif estado == 1 and vivos < 2:          
+    elif estado == 1 and v in sobrevive:
+        return 1
+    else:
         return 0
-    elif estado == 1 and vivos > 3:          
-        return 0
-    else:                                    
-        return estado                   
-   
-def transicion(M):
-    """Toma a la matriz completa y le aplica la función de
-    transición a cada célula con su propio vecindario y deja
-    el resultado en una matriz nueva."""
-    nueva_M = []                             
-    for f in range(len(M)):                  
-        nueva_fila = []
-        for c in range(len(M[0])):
-            v = obtener_vecinos(M, f, c)
-            nuevo_estado = transicion_celula(M[f][c], v)  
-            nueva_fila.append(nuevo_estado)
-        nueva_M.append(nueva_fila)
-    return nueva_M                      
+
+def transicion(M, nacimiento, sobrevive):
+    """
+    Aplica la función de transición a todas las células de la matriz y retorna la nueva matriz.
+    Entradas: M (matriz), nacimiento (tuple) dígitos B, sobrevive (tuple) dígitos S.
+    Salidas: nueva matriz con el estado siguiente del autómata.
+    Restricciones: M debe ser una matriz rectangular no vacía con valores 0 o 1.
+    """
+    MN = dc(M)
+    for filas in range(len(M)):
+        for columnas in range(len(M[0])):
+            MN[filas][columnas] = transicion_celula(M[filas][columnas], obtener_vecinos(M, filas, columnas), nacimiento, sobrevive)
+    return MN
+
+def guardarEstado(M, filas, columnas, tamaño, nacimiento, sobrevive):
+    """
+    Guarda el estado completo del autómata en un archivo pickle.
+    Entradas: M (matriz), filas (int), columnas (int), tamaño (int), nacimiento (tuple), sobrevive (tuple).
+    Salidas: archivo estadoConway.pkl en disco.
+    Restricciones: requiere permisos de escritura en el directorio actual.
+    """
+    parametros = (M, filas, columnas, tamaño, nacimiento, sobrevive)
+    with open("estadoConway.pkl", "wb") as archivo:
+        pk.dump(parametros, archivo)
